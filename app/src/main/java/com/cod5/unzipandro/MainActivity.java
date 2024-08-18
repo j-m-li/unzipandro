@@ -4,7 +4,7 @@
  * The authors disclaim copyright to this source code
  *
  */
-package com.cod5.signyourapk;
+package com.cod5.unzipandro;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -24,9 +24,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
-import com.android.apksigner.ApkSignerTool;
-import com.cod5.signyourapk.databinding.ActivityMainBinding;
-import net.fornwall.apksigner.Main;
+import com.cod5.unzipandro.databinding.ActivityMainBinding;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -39,9 +37,9 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int STORAGE_PERMISSION_CODE = 189;
 
-    //  static {
-    //    System.loadLibrary("signyourapk");
-    // }
+    static {
+        System.loadLibrary("hwzip");
+    }
 
     private ActivityMainBinding binding;
 
@@ -65,9 +63,10 @@ public class MainActivity extends AppCompatActivity {
         File d = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         File[] lst = d.listFiles();
         int i = 0;
+        binding.passwd.setText(d.getAbsolutePath() + "/out/");
         if (lst != null) {
             for (File f : lst) {
-                if (f.getName().endsWith(".apk")) {
+                if (true || f.getName().endsWith(".zip")) {
                     RadioButton r;
                     r = new RadioButton(this);
                     r.setText(f.getAbsolutePath());
@@ -138,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         if (binding.radio.getChildCount() < 1) {
             listDownloadsFiles();
             Toast.makeText(MainActivity.this, "please restart app.", Toast.LENGTH_LONG).show();
-            return;
+            //return;
         } else {
             binding.sampleText.setText(R.string.start);
             Toast.makeText(MainActivity.this, "Start signing", Toast.LENGTH_LONG).show();
@@ -152,8 +151,8 @@ public class MainActivity extends AppCompatActivity {
                 int id = binding.radio.getCheckedRadioButtonId();
                 if (id >= 0) {
                     RadioButton rdb = binding.radio.findViewById(id);
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    binding.passwd.setText(unzip(rdb.getText().toString(), binding.passwd.getText().toString()));
+                    /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         File cert = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/cert.bks");
                         Log.d("SignV2:", cert.getPath() + " " + binding.passwd.getText().toString() + " " + rdb.getText().toString());
                         if (!cert.exists()) {
@@ -166,33 +165,22 @@ public class MainActivity extends AppCompatActivity {
                             copyFile(in, out);
                             out.close();
                         }
-                        ApkSignerTool.main(new String[]{"sign", "--min-sdk-version", "16", "--ks",
-                                cert.getPath(),
-                                "--ks-pass", "pass:" + binding.passwd.getText().toString(),
-                                rdb.getText().toString()});
-                        binding.sampleText.setText(R.string.apk_signed_v2);
                     } else {
                         File cert = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/certificate.jks");
                         Log.d("Sign(v1):", cert.getPath() + " " + binding.passwd.getText().toString() + " " + rdb.getText().toString());
-                        Main.main("-p", binding.passwd.getText().toString(),
-                                cert.getPath(),
-                                rdb.getText().toString(),
-                                rdb.getText().toString() + "-signed.apk"
-                        );
-                        binding.sampleText.setText(R.string.apk_signed);
-                    }
-
+                    }*/
+                    binding.sampleText.setText(R.string.apk_signed);
                     Toast.makeText(MainActivity.this, "Success!", Toast.LENGTH_LONG).show();
                 } else {
-                    binding.sampleText.setText(R.string.please_select_an_apk);
+                    //binding.sampleText.setText(R.string.please_select_an_apk);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
             if (e.getCause() != null) {
-                binding.sampleText.setText(e.getCause().toString());
+                //binding.sampleText.setText(e.getCause().toString());
             } else {
-                binding.sampleText.setText(R.string.failed);
+                //binding.sampleText.setText(R.string.failed);
             }
         }
     }
@@ -213,5 +201,5 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //public native String stringFromJNI();
+    public native String unzip(String src, String dest);
 }

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SignYourApk</string>
+    <string name="app_name">unzipandro</string>
     <string name="sign_you_apk">Sign your APK</string>
     <string name="start">Start...</string>
     <string name="apk_signed">APK signed (v1) !</string>

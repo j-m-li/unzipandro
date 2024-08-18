@@ -1,4 +1,4 @@
-package com.cod5.signyourapk;
+package com.cod5.unzipandro;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.cod5.signyourapk", appContext.getPackageName());
+        assertEquals("com.cod5.unzipandro", appContext.getPackageName());
     }
 }

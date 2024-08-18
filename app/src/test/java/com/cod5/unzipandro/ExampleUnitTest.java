@@ -1,4 +1,4 @@
-package com.cod5.signyourapk;
+package com.cod5.unzipandro;
 
 import org.junit.Test;
 

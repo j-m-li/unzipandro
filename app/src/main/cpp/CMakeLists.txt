@@ -9,7 +9,8 @@ cmake_minimum_required(VERSION 3.22.1)
 # Since this is the top level CMakeLists.txt, the project name is also accessible
 # with ${CMAKE_PROJECT_NAME} (both CMake variables are in-sync within the top level
 # build script scope).
-project("signyourapk")
+# https://www.hanshq.net/files/hwzip/hwzip-2.3.zip
+project("hwzip")
 
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
@@ -26,7 +27,19 @@ project("signyourapk")
 # used in the AndroidManifest.xml file.
 add_library(${CMAKE_PROJECT_NAME} SHARED
         # List C/C++ source files with relative paths to this CMakeLists.txt.
-        native-lib.cpp)
+        native-lib.c
+        hwzip/crc32.c
+        hwzip/deflate.c
+        hwzip/huffman.c
+        hwzip/implode.c
+        hwzip/lz77.c
+        hwzip/reduce.c
+        hwzip/shrink.c
+        hwzip/tables.c
+        hwzip/zip.c
+        hwzip/android.c
+
+)
 
 # Specifies libraries CMake should link to your target library. You
 # can link libraries from various origins, such as libraries defined in this
