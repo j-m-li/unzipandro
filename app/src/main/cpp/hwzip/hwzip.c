@@ -11,7 +11,6 @@
 #include "zip.h"
 
 #define PERROR_IF(cnd, msg) do { if (cnd) { perror(msg); exit(1); } } while (0)
-#define PERROR_IF0(cnd, msg) do { if (cnd) { perror(msg); return; } } while (0)
 
 static void *xmalloc(size_t size)
 {
@@ -59,9 +58,9 @@ static void write_file(const char *filename, const uint8_t *data, size_t n)
         FILE *f;
 
         f = fopen(filename, "wb");
-        PERROR_IF0(f == NULL, "fopen");
-        PERROR_IF0(fwrite(data, 1, n, f) != n, "fwrite");
-        PERROR_IF0(fclose(f) != 0, "fclose");
+        PERROR_IF(f == NULL, "fopen");
+        PERROR_IF(fwrite(data, 1, n, f) != n, "fwrite");
+        PERROR_IF(fclose(f) != 0, "fclose");
 }
 
 static void list_zip(const char *filename)
@@ -78,8 +77,7 @@ static void list_zip(const char *filename)
 
         if (!zip_read(&z, zip_data, zip_sz)) {
                 printf("Failed to parse ZIP file!\n");
-                //exit(1);
-		return;
+                exit(1);
         }
 
         if (z.comment_len != 0) {
@@ -120,8 +118,7 @@ static void extract_zip(const char *filename)
 
         if (!zip_read(&z, zip_data, zip_sz)) {
                 printf("Failed to read ZIP file!\n");
-                //exit(1);
-		return;
+                exit(1);
         }
 
         if (z.comment_len != 0) {
@@ -160,14 +157,12 @@ static void extract_zip(const char *filename)
                 uncomp_data = xmalloc(m.uncomp_size);
                 if (!zip_extract_member(&m, uncomp_data)) {
                         printf("  Error: decompression failed!\n");
-                        //exit(1);
-			return;
+                        exit(1);
                 }
 
                 if (crc32(uncomp_data, m.uncomp_size) != m.crc32) {
                         printf("  Error: CRC-32 mismatch!\n");
-                        //exit(1);
-			return;
+                        exit(1);
                 }
 
                 tname = terminate_str((const char*)m.name, m.name_len);
@@ -237,8 +232,7 @@ static void create_zip(const char *zip_filename, const char *comment,
                 file_data[i] = read_file(filenames[i], &file_size);
                 if (file_size >= UINT32_MAX) {
                         printf("%s is too large!\n", filenames[i]);
-                        //exit(1);
-			return;
+                        exit(1);
                 }
                 file_sizes[i] = (uint32_t)file_size;
                 mtimes[i] = mtime;
@@ -247,8 +241,7 @@ static void create_zip(const char *zip_filename, const char *comment,
         zip_size = zip_max_size(n, filenames, file_sizes, comment);
         if (zip_size == 0) {
                 printf("zip writing not possible");
-                //exit(1);
-		return;
+                exit(1);
         }
 
         zip_data = xmalloc(zip_size);
@@ -303,8 +296,7 @@ static bool parse_method_flag(int argc, char **argv, int *i, method_t *m)
         } else {
                 print_usage(argv[0]);
                 printf("Unknown compression method: '%s'.\n", argv[*i + 1]);
-                //exit(1);
-		return false;
+                exit(1);
         }
         *i += 2;
         return true;

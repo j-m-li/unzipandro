@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
+import android.system.Os;
 import android.util.Log;
 import android.view.View;
 import android.widget.RadioButton;
@@ -32,13 +33,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int STORAGE_PERMISSION_CODE = 189;
 
     static {
-        System.loadLibrary("hwzip");
+        System.loadLibrary("natlib");
     }
 
     private ActivityMainBinding binding;
@@ -151,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
                 int id = binding.radio.getCheckedRadioButtonId();
                 if (id >= 0) {
                     RadioButton rdb = binding.radio.findViewById(id);
-                    binding.passwd.setText(unzip(rdb.getText().toString(), binding.passwd.getText().toString()));
+                    binding.passwd.setText(runCommand(binding.passwd.getText().toString(), "hwzip", rdb.getText().toString()));
                     /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         File cert = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/cert.bks");
                         Log.d("SignV2:", cert.getPath() + " " + binding.passwd.getText().toString() + " " + rdb.getText().toString());
@@ -201,5 +203,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public native String unzip(String src, String dest);
+    protected  String runCommand(String workingDir, String cmd, String src) {
+        try {
+            String expath = getApplicationContext().getApplicationInfo().nativeLibraryDir;
+            return exec(expath + "/lib" + "hwzip" + ".so", workingDir, "extract", src,"");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public native String exec(String cmd,
+                              String pwd,
+                              String arg1,
+                              String arg2,
+                              String arg3);
 }

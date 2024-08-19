@@ -10,7 +10,9 @@ cmake_minimum_required(VERSION 3.22.1)
 # with ${CMAKE_PROJECT_NAME} (both CMake variables are in-sync within the top level
 # build script scope).
 # https://www.hanshq.net/files/hwzip/hwzip-2.3.zip
-project("hwzip")
+project("natlib")
+
+enable_language(C)
 
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
@@ -28,6 +30,11 @@ project("hwzip")
 add_library(${CMAKE_PROJECT_NAME} SHARED
         # List C/C++ source files with relative paths to this CMakeLists.txt.
         native-lib.c
+)
+
+add_executable(
+        libhwzip.so
+
         hwzip/crc32.c
         hwzip/deflate.c
         hwzip/huffman.c
@@ -38,7 +45,6 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         hwzip/tables.c
         hwzip/zip.c
         hwzip/android.c
-
 )
 
 # Specifies libraries CMake should link to your target library. You
