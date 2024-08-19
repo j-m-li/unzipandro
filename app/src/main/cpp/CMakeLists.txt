@@ -46,6 +46,9 @@ add_executable(
         hwzip/zip.c
         hwzip/android.c
 )
+#set_target_properties(libhwzip.so PROPERTIES LINK_FLAGS -Wl,-stack_size,0x1000000)
+#target_compile_options(libhwzip.so PUBLIC "-Wl,o,-stack_size,0x100000000")
+#SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -Wl,stack,0x100000000")
 
 # Specifies libraries CMake should link to your target library. You
 # can link libraries from various origins, such as libraries defined in this

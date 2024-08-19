@@ -4,23 +4,44 @@
 
 void * __memcpy_chk(void * dest, const void * src, size_t len, size_t destlen)
 {
-    return memcpy(dest, src, len);
+    char	*p;
+    p = dest;
+    while (len--) *p++ = *(char *)src++;
+    return dest;
 }
 
 void * __memset_chk(void * dest, int c, size_t len, size_t destlen)
 {
-    return memset(dest, c, len);
+    char	*q;
+    q = dest;
+    while (len--) *(char *)dest++ = c;
+    return q;
 }
 
 void * __memmove_chk(void * dest, const void * src, size_t len, size_t destlen)
 {
-    return memmove(dest, src,len);
+    char *p;
+
+    if (dest < src) {
+	p = dest;
+	while (len--) *p++ = *(char *)src++;
+	return dest;
+    }
+    p = dest + len;
+    src += len;
+    while (len--) *--p = *(char *)--src;
+    return dest;
 }
 
 size_t __strlen_chk(const char *s, size_t s_len)
 {
-    size_t ret = strlen(s);
-    return ret;
+    size_t r;
+    r = 0;
+    while (*s) {
+	r++;
+	s++;
+    }
+    return r;
 }
 
 

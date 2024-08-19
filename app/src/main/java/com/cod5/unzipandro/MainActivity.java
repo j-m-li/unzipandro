@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         binding.passwd.setText(d.getAbsolutePath() + "/out/");
         if (lst != null) {
             for (File f : lst) {
-                if (true || f.getName().endsWith(".zip")) {
+                if (f.getName().endsWith(".zip")) {
                     RadioButton r;
                     r = new RadioButton(this);
                     r.setText(f.getAbsolutePath());
@@ -139,10 +139,10 @@ public class MainActivity extends AppCompatActivity {
         if (binding.radio.getChildCount() < 1) {
             listDownloadsFiles();
             Toast.makeText(MainActivity.this, "please restart app.", Toast.LENGTH_LONG).show();
-            //return;
+            return;
         } else {
-            binding.sampleText.setText(R.string.start);
-            Toast.makeText(MainActivity.this, "Start signing", Toast.LENGTH_LONG).show();
+            //binding.sampleText.setText(R.string.start);
+            //Toast.makeText(MainActivity.this, "Start signing", Toast.LENGTH_LONG).show();
         }
         try {
             InputStream in;
@@ -152,8 +152,9 @@ public class MainActivity extends AppCompatActivity {
             {
                 int id = binding.radio.getCheckedRadioButtonId();
                 if (id >= 0) {
+                    binding.sampleText.setText(R.string.start);
                     RadioButton rdb = binding.radio.findViewById(id);
-                    binding.passwd.setText(runCommand(binding.passwd.getText().toString(), "hwzip", rdb.getText().toString()));
+                    binding.sampleText.setText(runCommand(binding.passwd.getText().toString(), "hwzip", rdb.getText().toString()));
                     /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         File cert = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/cert.bks");
                         Log.d("SignV2:", cert.getPath() + " " + binding.passwd.getText().toString() + " " + rdb.getText().toString());
@@ -171,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
                         File cert = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/certificate.jks");
                         Log.d("Sign(v1):", cert.getPath() + " " + binding.passwd.getText().toString() + " " + rdb.getText().toString());
                     }*/
-                    binding.sampleText.setText(R.string.apk_signed);
+                    //binding.sampleText.setText(R.string.apk_signed);
                     Toast.makeText(MainActivity.this, "Success!", Toast.LENGTH_LONG).show();
                 } else {
                     //binding.sampleText.setText(R.string.please_select_an_apk);

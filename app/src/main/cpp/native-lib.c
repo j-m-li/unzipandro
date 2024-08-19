@@ -11,6 +11,8 @@
 #else
 #include <unistd.h>
 #include <wait.h>
+#include <sys/stat.h>
+
 #endif
 
 #define bld__MAX_CHILDREN 20
@@ -122,7 +124,7 @@ Java_com_cod5_unzipandro_MainActivity_exec(
 {
     int link[2];
     pid_t pid;
-    char buf[14096];
+    static char buf[14096];
     char *ncmd = (char*)(*env)->GetStringUTFChars(env,cmd, 0);
     char *npwd = (char*)(*env)->GetStringUTFChars(env,pwd, 0);
     char *narg1 = (char*)(*env)->GetStringUTFChars(env,arg1, 0);
@@ -130,8 +132,8 @@ Java_com_cod5_unzipandro_MainActivity_exec(
     char *narg3 = (char*)(*env)->GetStringUTFChars(env,arg3, 0);
 
     char *arg[] = {ncmd, narg1, narg2, 0, 0};
-    buf[0] = 'K';
-    buf[1] = 0;
+
+    mkdir(npwd, 0777);
     if (pipe(link)==-1) {
 	(*env)->ReleaseStringUTFChars(env,cmd, ncmd);
 	(*env)->ReleaseStringUTFChars(env,pwd, npwd);
@@ -156,11 +158,12 @@ Java_com_cod5_unzipandro_MainActivity_exec(
 	close(link[1]);
 	chdir(npwd);
 	execv(ncmd, arg);
-	return  0;
+	exit(0);
     } else {
 	close(link[1]);
-	int nbytes = read(link[0], buf, sizeof(buf));
-	wait(NULL);
+	waitpid(pid, NULL, 0);
+	int nbytes = read(link[0], buf, sizeof(buf)-1);
+
 	if (nbytes <= 0) {
 	    buf[0] = 0;
 	} else {
