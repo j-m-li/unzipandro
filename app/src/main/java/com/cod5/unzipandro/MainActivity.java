@@ -6,6 +6,8 @@
  */
 package com.cod5.unzipandro;
 
+import static java.util.concurrent.TimeUnit.*;
+
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
@@ -13,6 +15,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.system.Os;
 import android.util.Log;
@@ -34,6 +38,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -42,13 +49,16 @@ public class MainActivity extends AppCompatActivity {
     static {
         System.loadLibrary("natlib");
     }
-
+    private String txt;
+    private Handler handler = null;
+    private boolean running = false;
+    private ScheduledExecutorService scheduler;
     private ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        scheduler = Executors.newScheduledThreadPool(1);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -138,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (binding.radio.getChildCount() < 1) {
             listDownloadsFiles();
-            Toast.makeText(MainActivity.this, "please restart app.", Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this, "cannot find any .zip file.", Toast.LENGTH_LONG).show();
             return;
         } else {
             //binding.sampleText.setText(R.string.start);
@@ -148,7 +158,6 @@ public class MainActivity extends AppCompatActivity {
             InputStream in;
             OutputStream out;
             AssetManager assetManager = getAssets();
-
             {
                 int id = binding.radio.getCheckedRadioButtonId();
                 if (id >= 0) {
@@ -173,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.d("Sign(v1):", cert.getPath() + " " + binding.passwd.getText().toString() + " " + rdb.getText().toString());
                     }*/
                     //binding.sampleText.setText(R.string.apk_signed);
-                    Toast.makeText(MainActivity.this, "Success!", Toast.LENGTH_LONG).show();
+
                 } else {
                     //binding.sampleText.setText(R.string.please_select_an_apk);
                 }
@@ -203,14 +212,57 @@ public class MainActivity extends AppCompatActivity {
             binding.sampleText.setText(String.format("%s/app.apk", this.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)));
         }
     }
-
-    protected  String runCommand(String workingDir, String cmd, String src) {
-        try {
-            String expath = getApplicationContext().getApplicationInfo().nativeLibraryDir;
-            return exec(expath + "/lib" + "hwzip" + ".so", workingDir, "extract", src,"");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (scheduler != null) {
+            scheduler.shutdown();
         }
+    }
+    protected String runCommand(String workingDir, String cmd, String src) {
+        if (running) {
+            return "Already running... please wait.";
+        }
+
+        handler = new Handler(Looper.getMainLooper());
+
+        scheduler.schedule(new Runnable() {
+            @Override
+            public void run() {
+                String expath = getApplicationContext().getApplicationInfo().nativeLibraryDir;
+                running = true;
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (running) {
+                                binding.sampleText.setText(binding.sampleText.getText() + ".");
+                                handler.postDelayed(this, 500);
+                            }
+                        } catch (Exception e) {
+
+                        }
+                    }
+                });
+
+                try {
+                    //binding.passwd.setText(expath + "/lib" + "hwzip" + ".so");
+                    txt = exec(expath + "/lib" + "hwzip" + ".so", workingDir, "extract", src, "");
+                } catch (Exception e) {
+                    txt = "Error 5674";
+                }
+                running = false;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        binding.sampleText.setText(txt);
+                        //Toast.makeText(MainActivity.this, "Success!", Toast.LENGTH_LONG).show();
+                    }
+                });
+             }
+        }, 1, MILLISECONDS);
+
+        return "Running unzip...";
     }
 
     public native String exec(String cmd,
