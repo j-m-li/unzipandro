@@ -11,6 +11,8 @@
 #include "zip.h"
 #include "folder.h"
 
+#define MAX_FILES 0xFFFF
+
 #define PERROR_IF(cnd, msg) do { if (cnd) { perror(msg); exit(1); } } while (0)
 
 static void *xmalloc(size_t size)
@@ -103,28 +105,54 @@ static char *terminate_str(const char *str, size_t n)
         return p;
 }
 
-static void list_folder(char *name)
+static void expand_folders(const char *name, char **file_names, uint16_t *n)
 {
-    FOLDER *ffd;
-    char *entry;
-    int l;
-    char fldr[FILENAME_MAX];
-    ffd = openfldr(name);
-    if (!ffd) return;
-    snprintf(fldr, sizeof(fldr), "%s", name);
-    l = strlen(fldr);
-    if(fldr[l-1] == '/') {
-	l--;
-    }
-    while (entry = readfldr(ffd)) {
-	fldr[l] = '\0';
-	printf("%s/%s\n", fldr, entry);
-	if (entry[strlen(entry)-1] == '/') {
-	    snprintf(fldr +l, sizeof(fldr)-l, "/%s", entry);
-	    list_folder(fldr);
-	}
-    }
-    closefldr(ffd);
+	FOLDER *ffd;
+    	char *entry;
+    	int l;
+    	char fldr[FILENAME_MAX];
+
+    	ffd = openfldr(name);
+    	if (!ffd) {
+		if (*n < MAX_FILES) {
+			file_names[*n] = strdup(name);
+			(*n)++;
+		}
+		return;
+    	}
+    	if (strcmp(name, ".")) {
+    		snprintf(fldr, sizeof(fldr), "%s", name);
+    		l = strlen(fldr);
+   		if(fldr[l-1] == '/') {
+			l--;
+    		}
+    	} else {
+		l = 0;
+		fldr[0] = '\0';
+    	}
+    	while ((entry = readfldr(ffd)) != NULL) {
+		fldr[l] = '\0';
+		if (entry[strlen(entry)-1] == '/') {
+	    	if (l) {			
+	    		snprintf(fldr +l, sizeof(fldr)-l, "/%s", entry);
+	    	} else {
+			snprintf(fldr +l, sizeof(fldr)-l, "%s", entry);
+	    	}	
+	    	expand_folders(fldr, file_names, n);
+		} else {
+			if (*n < MAX_FILES) {
+				if (l) {
+					snprintf(fldr +l, sizeof(fldr)-l, "/%s", entry);
+				} else {
+					snprintf(fldr +l, sizeof(fldr)-l, "%s", entry);
+				}
+				file_names[*n] = strdup(fldr);
+				(*n)++;
+			}
+		}
+
+    	}
+    	closefldr(ffd);
 }
 
 static void make_folder(char *tname)
@@ -150,7 +178,7 @@ static char *my_strnstr(const char *big,	const char *little, size_t len)
     int n;
 
     if (!little[0]) {
-	return big;
+	return (char*)big;
     }
     while (*p && len > 0) {
 	n = 0;
@@ -196,7 +224,7 @@ static void extract_zip(const char *filename)
 		        printf(" (Creating dir: %.*s)\n",
 			   (int)m.name_len, m.name);
 		        if (m.name[0] == '/' || m.name[0] == '\\' ||
-			   my_strnstr(m.name, "..", m.name_len) != NULL) {
+			   my_strnstr((char*)m.name, "..", m.name_len) != NULL) {
 
 			   tname = terminate_str((const char *) m.name, m.name_len);
 			   mkfldr(tname);
@@ -206,7 +234,7 @@ static void extract_zip(const char *filename)
                 }
 
                 if (m.name[0] == '/' || m.name[0] == '\\' ||
-                    my_strnstr(m.name, "..", m.name_len) != NULL) {
+                    my_strnstr((char*)m.name, "..", m.name_len) != NULL) {
                         printf(" (Skipping file : %.*s)\n",
                                (int)m.name_len, m.name);
                         continue;
@@ -285,6 +313,8 @@ static void create_zip(const char *zip_filename, const char *comment,
         time_t *mtimes;
         uint8_t **file_data;
         uint32_t *file_sizes;
+	char **file_names;
+	uint16_t file_n;
         size_t file_size, zip_size;
         uint8_t *zip_data;
         uint16_t i;
@@ -297,28 +327,38 @@ static void create_zip(const char *zip_filename, const char *comment,
 
         mtime = time(NULL);
 
-        file_data = xmalloc(sizeof(file_data[0]) * n);
-        file_sizes = xmalloc(sizeof(file_sizes[0]) * n);
-        mtimes = xmalloc(sizeof(mtimes[0]) * n);
+	file_names = xmalloc(sizeof(file_names[0]) * MAX_FILES);
+	file_n = 0;
+	for (i = 0; i < n; i++) {
+		expand_folders(filenames[i], file_names, &file_n);
+	}
+	if (file_n >= MAX_FILES) {
+        	printf("too many files!\n");
+                exit(1);
+        }
 
-        for (i = 0; i < n; i++) {
-                file_data[i] = read_file(filenames[i], &file_size);
+        file_data = xmalloc(sizeof(file_data[0]) * file_n);
+        file_sizes = xmalloc(sizeof(file_sizes[0]) * file_n);
+        mtimes = xmalloc(sizeof(mtimes[0]) * file_n);
+
+        for (i = 0; i < file_n; i++) {
+                file_data[i] = read_file(file_names[i], &file_size);
                 if (file_size >= UINT32_MAX) {
-                        printf("%s is too large!\n", filenames[i]);
+                        printf("%s is too large!\n", file_names[i]);
                         exit(1);
                 }
                 file_sizes[i] = (uint32_t)file_size;
                 mtimes[i] = mtime;
         }
 
-        zip_size = zip_max_size(n, filenames, file_sizes, comment);
+        zip_size = zip_max_size(file_n, (const char *const *)file_names, file_sizes, comment);
         if (zip_size == 0) {
                 printf("zip writing not possible");
                 exit(1);
         }
 
         zip_data = xmalloc(zip_size);
-        zip_size = zip_write(zip_data, n, filenames,
+        zip_size = zip_write(zip_data, file_n, (const char *const *)file_names,
                              (const uint8_t *const *)file_data,
                              file_sizes, mtimes, comment, method, zip_callback);
 
@@ -326,12 +366,14 @@ static void create_zip(const char *zip_filename, const char *comment,
         printf("\n");
 
         free(zip_data);
-        for (i = 0; i < n; i++) {
+        for (i = 0; i < file_n; i++) {
                 free(file_data[i]);
+		free(file_names[i]);
         }
         free(mtimes);
         free(file_sizes);
         free(file_data);
+	free(file_names);
 }
 
 static void print_usage(const char *argv0)

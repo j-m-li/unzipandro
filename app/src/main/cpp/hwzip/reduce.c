@@ -401,10 +401,12 @@ static bool lit_callback(uint8_t lit, void *aux)
         return true;
 }
 
-static inline size_t min(size_t a, size_t b)
+#ifndef min
+static  inline size_t min(size_t a, size_t b)
 {
         return a < b ? a : b;
 }
+#endif
 
 static bool backref_callback(size_t dist, size_t len, void *aux)
 {
