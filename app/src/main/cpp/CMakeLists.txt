@@ -37,6 +37,7 @@ add_executable(
 
         hwzip/crc32.c
         hwzip/deflate.c
+        hwzip/folder.c
         hwzip/huffman.c
         hwzip/implode.c
         hwzip/lz77.c

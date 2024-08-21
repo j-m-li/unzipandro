@@ -9,6 +9,7 @@
 #include "deflate.h"
 #include "version.h"
 #include "zip.h"
+#include "folder.h"
 
 #define PERROR_IF(cnd, msg) do { if (cnd) { perror(msg); exit(1); } } while (0)
 
@@ -102,6 +103,69 @@ static char *terminate_str(const char *str, size_t n)
         return p;
 }
 
+static void list_folder(char *name)
+{
+    FOLDER *ffd;
+    char *entry;
+    int l;
+    char fldr[FILENAME_MAX];
+    ffd = openfldr(name);
+    if (!ffd) return;
+    snprintf(fldr, sizeof(fldr), "%s", name);
+    l = strlen(fldr);
+    if(fldr[l-1] == '/') {
+	l--;
+    }
+    while (entry = readfldr(ffd)) {
+	fldr[l] = '\0';
+	printf("%s/%s\n", fldr, entry);
+	if (entry[strlen(entry)-1] == '/') {
+	    snprintf(fldr +l, sizeof(fldr)-l, "/%s", entry);
+	    list_folder(fldr);
+	}
+    }
+    closefldr(ffd);
+}
+
+static void make_folder(char *tname)
+{
+	char *slash;
+	char c;
+	slash = strrchr(tname, '/');
+	if (!slash) {
+	    slash = strrchr(tname, '\\');
+	}
+	if (!slash) {
+		return;
+	}
+	c = *slash;
+	*slash = '\0';
+    	mkfldr(tname);
+	*slash = c;
+}
+
+static char *my_strnstr(const char *big,	const char *little, size_t len)
+{
+    char *p = (char*)big;
+    int n;
+
+    if (!little[0]) {
+	return big;
+    }
+    while (*p && len > 0) {
+	n = 0;
+	while (little[n] == p[n]) {
+	    n++;
+	    if (!little[0]) {
+		return p;
+	    }
+	}
+	p++;
+	len--;
+    }
+    return NULL;
+}
+
 static void extract_zip(const char *filename)
 {
         uint8_t *zip_data;
@@ -129,14 +193,21 @@ static void extract_zip(const char *filename)
                 m = zip_member(&z, it);
 
                 if (m.is_dir) {
-                        printf(" (Skipping dir: %.*s)\n",
-                               (int)m.name_len, m.name);
+		        printf(" (Creating dir: %.*s)\n",
+			   (int)m.name_len, m.name);
+		        if (m.name[0] == '/' || m.name[0] == '\\' ||
+			   my_strnstr(m.name, "..", m.name_len) != NULL) {
+
+			   tname = terminate_str((const char *) m.name, m.name_len);
+			   mkfldr(tname);
+			   free(tname);
+		        }
                         continue;
                 }
 
-                if (memchr(m.name, '/',  m.name_len) != NULL ||
-                    memchr(m.name, '\\', m.name_len) != NULL) {
-                        printf(" (Skipping file in dir: %.*s)\n",
+                if (m.name[0] == '/' || m.name[0] == '\\' ||
+                    my_strnstr(m.name, "..", m.name_len) != NULL) {
+                        printf(" (Skipping file : %.*s)\n",
                                (int)m.name_len, m.name);
                         continue;
                 }
@@ -166,6 +237,7 @@ static void extract_zip(const char *filename)
                 }
 
                 tname = terminate_str((const char*)m.name, m.name_len);
+		make_folder(tname);
                 write_file(tname, uncomp_data, m.uncomp_size);
                 printf("\n");
 
@@ -174,6 +246,7 @@ static void extract_zip(const char *filename)
         }
 
         printf("\n");
+    	//list_folder(".");
         free(zip_data);
 }
 
