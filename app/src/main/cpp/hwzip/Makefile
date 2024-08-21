@@ -71,6 +71,7 @@ endif
 # Source files shared between targets.
 CORESRC  = crc32.c
 CORESRC += deflate.c
+CORESRC += folder.c
 CORESRC += huffman.c
 CORESRC += implode.c
 CORESRC += lz77.c
