@@ -130,7 +130,7 @@ int closefldr(FOLDER *ffd)
 /****************************************************************************/
 #include <stdio.h>
 #include <dirent.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>

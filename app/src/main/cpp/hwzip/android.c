@@ -1,3 +1,6 @@
+/*
+ * Public domain
+ */
 
 #include <stdlib.h>
 #include "hwzip.c"
