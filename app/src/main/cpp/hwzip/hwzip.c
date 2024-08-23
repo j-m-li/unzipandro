@@ -221,19 +221,21 @@ static void extract_zip(const char *filename)
                 m = zip_member(&z, it);
 
                 if (m.is_dir) {
-		        printf(" (Creating dir: %.*s)\n",
-			   (int)m.name_len, m.name);
-		        if (m.name[0] == '/' || m.name[0] == '\\' ||
+		        if (m.name[0] == '/' || m.name[0] == '\\' || m.name[0] == '~' ||
 			   my_strnstr((char*)m.name, "..", m.name_len) != NULL) {
-
-			   tname = terminate_str((const char *) m.name, m.name_len);
-			   mkfldr(tname);
-			   free(tname);
+			    printf(" (Skipping dir: %.*s)\n",
+				   (int)m.name_len, m.name);
+			} else {
+			    printf(" Creating dir: %.*s\n",
+				   (int)m.name_len, m.name);
+			    tname = terminate_str((const char *) m.name, m.name_len);
+			    mkfldr(tname);
+			    free(tname);
 		        }
                         continue;
                 }
 
-                if (m.name[0] == '/' || m.name[0] == '\\' ||
+                if (m.name[0] == '/' || m.name[0] == '\\' || m.name[0] == '~' ||
                     my_strnstr((char*)m.name, "..", m.name_len) != NULL) {
                         printf(" (Skipping file : %.*s)\n",
                                (int)m.name_len, m.name);
@@ -274,7 +276,6 @@ static void extract_zip(const char *filename)
         }
 
         printf("\n");
-    	//list_folder(".");
         free(zip_data);
 }
 
