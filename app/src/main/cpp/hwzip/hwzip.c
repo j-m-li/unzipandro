@@ -192,6 +192,7 @@ static int is_relative(const uint8_t *name, size_t len)
 	case '|':
 	case '?':
 	case '*':
+	case 0x7F:
 	    return 0;
 	case '.':
 	    if (i + 1 < len && name[i+1] == '.') {
