@@ -53,4 +53,4 @@ int rmfldr(const char *path);
 #ifdef __cplusplus
 }
 #endif
-#endif //_FOLDER_H
+#endif /*_FOLDER_H*/

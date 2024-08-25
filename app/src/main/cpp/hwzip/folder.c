@@ -197,7 +197,7 @@ char *readfldr(FOLDER *ffd)
     {
         return NULL;
     }
-    if ((sb.st_mode & S_IFMT) == S_IFDIR)
+    if (S_ISDIR(sb.st_mode))
     {
         ffd->fldrname[ffd->namelen + l] = '/';
         ffd->fldrname[ffd->namelen + l + 1] = '\0';
@@ -223,8 +223,10 @@ int mkfldr(const char *path)
     char *b;
     char c;
     int r = 0;
-
-    snprintf(temp, sizeof(temp), "%s", path);
+    if (strlen(path) >= sizeof(temp)) {
+        return -1;
+    }
+    sprintf(temp, "%s", path);
     b = temp;
     while (*b)
     {
