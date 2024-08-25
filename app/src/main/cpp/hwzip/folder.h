@@ -44,7 +44,7 @@ int mkfldr(const char *path);
 
 /**
  * Delete an empty folder.
- * @param path elative or absolute path to delete.
+ * @param path relative or absolute path to delete.
  * @return  0 on success.
  */
 int rmfldr(const char *path);

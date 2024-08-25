@@ -172,26 +172,44 @@ static void make_folder(char *tname)
 	*slash = c;
 }
 
-static char *my_strnstr(const char *big,	const char *little, size_t len)
+static int is_relative(const uint8_t *name, size_t len)
 {
-    char *p = (char*)big;
-    int n;
+    size_t i;
 
-    if (!little[0]) {
-	return (char*)big;
+    if (len < 1) {
+	return 0;
     }
-    while (*p && len > 0) {
-	n = 0;
-	while (little[n] == p[n]) {
-	    n++;
-	    if (!little[0]) {
-		return p;
+    if (name[0] == '/' || name[0] == '\\' || name[0] == '~') {
+	return 0;
+    }
+    i = 0;
+    while (i < len) {
+	switch (name[i]) {
+	case '<':
+	case '>':
+	case ':':
+	case '"':
+	case '|':
+	case '?':
+	case '*':
+	    return 0;
+	case '.':
+	    if (i + 1 < len && name[i+1] == '.') {
+		return 0;
+	    }
+	    break;
+        default:
+	    if (name[i] < ' ') {
+		return 0;
 	    }
 	}
-	p++;
-	len--;
+	i++;
     }
-    return NULL;
+    i = len - 1;
+    if (name[i] == ' ' || name[i] == '.') {
+	return 0;
+    }
+    return 1;
 }
 
 static void extract_zip(const char *filename)
@@ -221,8 +239,7 @@ static void extract_zip(const char *filename)
                 m = zip_member(&z, it);
 
                 if (m.is_dir) {
-		        if (m.name[0] == '/' || m.name[0] == '\\' || m.name[0] == '~' ||
-			   my_strnstr((char*)m.name, "..", m.name_len) != NULL) {
+		        if (!is_relative(m.name, m.name_len)) {
 			    printf(" (Skipping dir: %.*s)\n",
 				   (int)m.name_len, m.name);
 			} else {
@@ -235,8 +252,7 @@ static void extract_zip(const char *filename)
                         continue;
                 }
 
-                if (m.name[0] == '/' || m.name[0] == '\\' || m.name[0] == '~' ||
-                    my_strnstr((char*)m.name, "..", m.name_len) != NULL) {
+                if (!is_relative(m.name, m.name_len)) {
                         printf(" (Skipping file : %.*s)\n",
                                (int)m.name_len, m.name);
                         continue;
