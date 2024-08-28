@@ -1,0 +1,24 @@
+UnzipAndro
+==========
+
+Short
+------
+
+Extract the .zip files located in your Download directory.
+
+
+Description
+-----------
+
+UnzipAndro has been created due to the need for a free and easy to use "unzip"
+utility.
+
+There are other applications of this kind available on the store, but our app is
+ad-free and its Java / C source code is available for free.
+
+It was developed in the context of the PDOS (Public Domain Operating System)
+project by a worldwide team of developers.
+
+For more information about the PDOS project visit the website https://pdos.org
+
+

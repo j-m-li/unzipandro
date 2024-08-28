@@ -109,7 +109,7 @@ static void expand_folders(const char *name, char **file_names, uint16_t *n)
 {
 	FOLDER *ffd;
     	char *entry;
-    	int l;
+    	int l, le;
     	char fldr[FILENAME_MAX];
 
     	ffd = openfldr(name);
@@ -121,8 +121,11 @@ static void expand_folders(const char *name, char **file_names, uint16_t *n)
 		return;
     	}
     	if (strcmp(name, ".")) {
-    		snprintf(fldr, sizeof(fldr), "%s", name);
-    		l = strlen(fldr);
+	        l = strlen(name);
+	        if (l >= sizeof(fldr) -1) {
+		    return;
+	        }
+	        memcpy(fldr,  name, l);
    		if(fldr[l-1] == '/') {
 			l--;
     		}
@@ -132,20 +135,21 @@ static void expand_folders(const char *name, char **file_names, uint16_t *n)
     	}
     	while ((entry = readfldr(ffd)) != NULL) {
 		fldr[l] = '\0';
-		if (entry[strlen(entry)-1] == '/') {
-	    	if (l) {			
-	    		snprintf(fldr +l, sizeof(fldr)-l, "/%s", entry);
+		le = strlen(entry);
+		if (le < 1 || le >= (sizeof(fldr) - l - 2)) {
+		        printf(" (Skipping file: %s/%s)\n", fldr, entry);
+		        continue;
+		}
+	    	if (l) {
+			fldr[l + 1] = '/';
+			memcpy(fldr + l + 1,  entry, le + 1);
 	    	} else {
-			snprintf(fldr +l, sizeof(fldr)-l, "%s", entry);
-	    	}	
-	    	expand_folders(fldr, file_names, n);
+			memcpy(fldr + l,  entry, le + 1);
+	    	}
+		if (entry[le - 1] == '/') {
+	    		expand_folders(fldr, file_names, n);
 		} else {
 			if (*n < MAX_FILES) {
-				if (l) {
-					snprintf(fldr +l, sizeof(fldr)-l, "/%s", entry);
-				} else {
-					snprintf(fldr +l, sizeof(fldr)-l, "%s", entry);
-				}
 				file_names[*n] = strdup(fldr);
 				(*n)++;
 			}

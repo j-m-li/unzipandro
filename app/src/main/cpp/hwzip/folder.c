@@ -223,10 +223,12 @@ int mkfldr(const char *path)
     char *b;
     char c;
     int r = 0;
-    if (strlen(path) >= sizeof(temp)) {
+    size_t l;
+    l = strlen(path);
+    if (l >= sizeof(temp) -1) {
         return -1;
     }
-    sprintf(temp, "%s", path);
+    memcpy(temp, path, l + 1);
     b = temp;
     while (*b)
     {

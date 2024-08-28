@@ -36,6 +36,21 @@ void * __memmove_chk(void * dest, const void * src, size_t len, size_t destlen)
     return dest;
 }
 
+char * __strrchr_chk(const char *str, int ch, size_t destlen)
+{
+    char *p;
+    char *ret = NULL;
+
+    p = str;
+    while (*p) {
+	if (*p == (char)ch) {
+	    ret = p;
+	}
+	p++;
+    }
+    return ret;
+}
+
 size_t __strlen_chk(const char *s, size_t s_len)
 {
     size_t r;
