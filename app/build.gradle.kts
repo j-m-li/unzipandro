@@ -16,6 +16,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+    experimentalProperties["android.ndk.suppressMinSdkVersionError"]=21
 
     buildTypes {
         release {
@@ -30,6 +31,11 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = true
+        }
     }
     externalNativeBuild {
         cmake {

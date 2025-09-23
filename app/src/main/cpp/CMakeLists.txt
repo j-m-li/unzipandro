@@ -27,10 +27,12 @@ enable_language(C)
 # System.loadLibrary() and pass the name of the library defined here;
 # for GameActivity/NativeActivity derived applications, the same library name must be
 # used in the AndroidManifest.xml file.
+
 add_library(${CMAKE_PROJECT_NAME} SHARED
         # List C/C++ source files with relative paths to this CMakeLists.txt.
         native-lib.c
 )
+
 
 add_executable(
         libhwzip.so
@@ -47,6 +49,9 @@ add_executable(
         hwzip/zip.c
         hwzip/android.c
 )
+target_link_options(libhwzip.so PRIVATE "-Wl,-z,max-page-size=16384")
+target_link_options(libhwzip.so PRIVATE "-Wl,-z,common-page-size=16384")
+
 #set_target_properties(libhwzip.so PROPERTIES LINK_FLAGS -Wl,-stack_size,0x1000000)
 #target_compile_options(libhwzip.so PUBLIC "-Wl,o,-stack_size,0x100000000")
 #SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -Wl,stack,0x100000000")
@@ -54,6 +59,9 @@ add_executable(
 # Specifies libraries CMake should link to your target library. You
 # can link libraries from various origins, such as libraries defined in this
 # build script, prebuilt third-party libraries, or Android system libraries.
+target_link_options(${CMAKE_PROJECT_NAME} PRIVATE "-Wl,-z,max-page-size=16384")
+target_link_options(${CMAKE_PROJECT_NAME} PRIVATE "-Wl,-z,common-page-size=16384")
+
 target_link_libraries(${CMAKE_PROJECT_NAME}
         # List libraries link to the target library
         android
