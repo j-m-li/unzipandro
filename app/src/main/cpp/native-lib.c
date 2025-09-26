@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <wait.h>
 #include <sys/stat.h>
+#include <dlfcn.h>
 
 #endif
 
@@ -198,3 +199,20 @@ Java_com_cod5_unzipandro_MainActivity_exec(
     return ret;
 }
 
+ssize_t __read_chk(int a, void* __BIONIC_COMPLICATED_NULLNESS b, size_t c, size_t d)
+{
+    void *foo;
+    void *pLib = dlopen("libc.so", RTLD_LAZY);
+    if (!pLib) {
+	return 0;
+    }
+    foo = dlsym(pLib, "__read_chk");
+    if (foo) {
+	return ((ssize_t(*)(int,void* __BIONIC_COMPLICATED_NULLNESS, size_t, size_t))foo)(a,b,c,d);
+    }
+    foo = dlsym(pLib, "read");
+    if (foo) {
+	return ((ssize_t(*)(int,void* __BIONIC_COMPLICATED_NULLNESS, size_t))foo)(a,b,c);
+    }
+    return 0;
+}

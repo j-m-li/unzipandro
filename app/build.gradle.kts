@@ -4,14 +4,14 @@ plugins {
 
 android {
     namespace = "com.cod5.unzipandro"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.cod5.unzipandro"
         minSdk = 16
-        targetSdk = 34
-        versionCode = 3
-        versionName = "1.0.1"
+        targetSdk = 36
+        versionCode = 4
+        versionName = "1.0.2"
         multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -47,6 +47,7 @@ android {
         dataBinding = true
         viewBinding = true
     }
+
 }
 
 dependencies {
